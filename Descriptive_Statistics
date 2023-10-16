@@ -1,0 +1,143 @@
+#descriptive statistics
+
+#a lot of this can be done using built in R functions. Some more advanced 
+#stuff will require the dplyr and tableone package.
+
+View(core_dataset_8_31_2023)
+#name of the data frame is "core_dataset_8_31_2023"
+
+#for this example I'll use distance_duration
+
+class(core_dataset_8_31_2023$distance_duration)
+#it's a character variable. Can be changed to a factor variable if needed
+#with the following code.
+
+core_dataset_8_31_2023$distance_duration <- as.factor(core_dataset_8_31_2023$distance_duration)
+
+##########
+#exploring the distributions of this categorical variable
+table(core_dataset_8_31_2023$distance_duration)
+# < 30 min      > 90 min     30-60 min     60-90 min International       Unknown 
+# 86099          8711         32588          4107           252         22657 
+
+#If i want to look at distributions at each study visit I can do the following
+
+table(core_dataset_8_31_2023$event_num_x, core_dataset_8_31_2023$distance_duration)
+#       < 30 min > 90 min 30-60 min 60-90 min International Unknown
+# 0       7548      576      2767       341             9     637
+# 0.5     7548      576      2767       341             9     637
+# 1       7472      644      2764       342            19     637
+# 1.5     7472      644      2764       342            19     637
+# 2       7341      741      2779       357            23     637
+# 2.5     7341      741      2779       357            23     637
+# 3       7307      772      2784       354            24     637
+# 3.5     7307      772      2784       354            24     637
+# 4       7175      837      2795       348            30     693
+# 4.5     7222      837      2803       349            30     637
+# 5       6029      762      2311       300            23    2453
+# 5.5     4305      563      1716       226            13    5055
+# 6       2032      246       775        96             6    8723
+
+#Results show distributions at each study visit. 
+
+#the following can be an easy way to look at missing data for the variable at each study visit.
+table(core_dataset_8_31_2023$event_num_x, core_dataset_8_31_2023$distance_duration, useNA="always" )
+
+#################################
+#if the variable is numeric then you can look at distributions with the summary function
+summary(core_dataset_8_31_2023$age_visit_days)
+
+class(core_dataset_8_31_2023$age_visit_months)
+#"character"
+
+#changing it to numeric
+
+core_dataset_8_31_2023$age_visit_months <- as.numeric(core_dataset_8_31_2023$age_visit_months)
+
+summary(core_dataset_8_31_2023$age_visit_months)
+#  Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#  99.0   134.0   152.0   152.1   170.0   212.0   16398 
+
+#################################
+
+#if you want to check for outliers then you can try using histograms or boxplots
+hist(core_dataset_8_31_2023$age_visit_months)
+
+#this is just an example. I don't think age would be at risk of having any outliers.
+
+boxplot(core_dataset_8_31_2023$age_visit_months, ylab="age in months")
+
+#we can extract outlying data points 
+
+out <- boxplot.stats(core_dataset_8_31_2023$age_visit_months)$out
+out_ind <- which(core_dataset_8_31_2023$age_visit_months %in% c(out))
+out_ind
+#there are zero here
+
+#other methods involve using cut-offs like 2 or 3 standard deviations from the mean.
+#but I would not remove outliers unless they are the result of measurement error.
+#################################
+
+
+#back to the categorical variable distance duration. We can use tableone to 
+#look at the distributions across other variables along with checking
+#if there is a statistically significant difference between groups (chi-square test).
+
+######
+library(tableone)
+
+
+library(tableone)
+
+#here we specify all the variables we are interested in including. Will keep it simple
+#for the example.
+myVars <- c("distance_duration", "age_visit_months", "sex_birth", "event")
+
+#here we specify which of the above variables are categorical variables.
+catVars <- c("distance_duration", "sex_birth", "event")
+
+
+#here we create the table and can specify the group so we can summarize for each group level.
+#we are using distance duration for the example. This will only work with categorical
+#variables
+
+tab1 <- CreateTableOne(vars=myVars, strata=c("distance_duration"), data=core_dataset_8_31_2023, factorVars=catVars)
+
+#we can print the table directly into the R console.
+print(tab1, showAllLevels=TRUE,formatOptions=list(big.mark=","))
+
+#we can also create a csv file. I like to include the NA in the table.
+tab1Mat <- print(tab1, showAllLevels=TRUE,quote=FALSE, noSpaces=TRUE, printToggle=FALSE, includeNA=TRUE)
+
+#below will save to your working directory
+write.csv(tab1Mat, file="distance_duration.csv")
+################################
+
+#now if you are interested in doing this with a numeric/continuous variable 
+#then you can use dplyr.
+
+#the below will just show us the mean age (months) at each study visit. We
+#also get the standard deviation. 
+
+core_dataset_8_31_2023 %>% 
+  group_by(event) %>% #specify the variable you want t
+  summarize(mean = mean(age_visit_months, na.rm=TRUE),
+            #         summarize(median = median(age_visit_months, na.rm=TRUE),
+            (sd=sd(age_visit_months, na.rm=TRUE)))
+
+#     event     mean `(sd = sd(age_visit_months, na.rm = TRUE))`
+#   <chr>    <dbl>                                       <dbl>
+# 1 0.5 Year  125.                                        7.57
+# 2 1 Year    131.                                        7.73
+# 3 1.5 Year  137.                                        7.63
+# 4 2 Year    145.                                        8.03
+# 5 2.5 Year  149.                                        7.70
+# 6 3 Year    155.                                        7.81
+# 7 3.5 Year  161.                                        7.63
+# 8 4 Year    170.                                        8.39
+# 9 4.5 Year  174.                                        7.74
+# 10 5 Year    181.                                       8.01
+# 11 5.5 Year  186.                                       7.68
+# 12 6 Year    193.                                       7.79
+# 13 Baseline  119.                                       7.53
+##################################
