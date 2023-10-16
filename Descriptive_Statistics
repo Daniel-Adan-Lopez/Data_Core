@@ -6,13 +6,15 @@
 View(core_dataset_8_31_2023)
 #name of the data frame is "core_dataset_8_31_2023"
 
-#for this example I'll use distance_duration
+#for this example I'll use "distance_duration"
 
 class(core_dataset_8_31_2023$distance_duration)
 #it's a character variable. Can be changed to a factor variable if needed
 #with the following code.
 
 core_dataset_8_31_2023$distance_duration <- as.factor(core_dataset_8_31_2023$distance_duration)
+
+#changing it to a factor variable is not necessary unless the modeling requires factor variables.
 
 ##########
 #exploring the distributions of this categorical variable
@@ -45,12 +47,12 @@ table(core_dataset_8_31_2023$event_num_x, core_dataset_8_31_2023$distance_durati
 
 #################################
 #if the variable is numeric then you can look at distributions with the summary function
-summary(core_dataset_8_31_2023$age_visit_days)
+#first let's make sure this variable is numeric.
 
 class(core_dataset_8_31_2023$age_visit_months)
 #"character"
 
-#changing it to numeric
+#changing age_visit_months to a numeric variable. 
 
 core_dataset_8_31_2023$age_visit_months <- as.numeric(core_dataset_8_31_2023$age_visit_months)
 
@@ -58,9 +60,17 @@ summary(core_dataset_8_31_2023$age_visit_months)
 #  Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #  99.0   134.0   152.0   152.1   170.0   212.0   16398 
 
+#the output gives us some descriptive stats. To check the standard deviation you can use
+
+sd(core_dataset_8_31_2023$age_visit_months)
+
+#if you have missing data you can specify na.rm=TRUE.
+
+sd(core_dataset_8_31_2023$age_visit_months, na.rm=TRUE)
+
 #################################
 
-#if you want to check for outliers then you can try using histograms or boxplots
+#if you want to visually check for outliers then you can try using histograms or boxplots
 hist(core_dataset_8_31_2023$age_visit_months)
 
 #this is just an example. I don't think age would be at risk of having any outliers.
@@ -79,14 +89,11 @@ out_ind
 #################################
 
 
-#back to the categorical variable distance duration. We can use tableone to 
+#back to the categorical variable "distance_duration". We can use tableone to 
 #look at the distributions across other variables along with checking
 #if there is a statistically significant difference between groups (chi-square test).
 
 ######
-library(tableone)
-
-
 library(tableone)
 
 #here we specify all the variables we are interested in including. Will keep it simple
@@ -125,7 +132,8 @@ core_dataset_8_31_2023 %>%
             #         summarize(median = median(age_visit_months, na.rm=TRUE),
             (sd=sd(age_visit_months, na.rm=TRUE)))
 
-#     event     mean `(sd = sd(age_visit_months, na.rm = TRUE))`
+#     event   mean `(sd = sd(age_visit_months, na.rm = TRUE))`
+    event     mean                                         sd
 #   <chr>    <dbl>                                       <dbl>
 # 1 0.5 Year  125.                                        7.57
 # 2 1 Year    131.                                        7.73
